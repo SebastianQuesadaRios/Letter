@@ -20,19 +20,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Agregar event listener al botón de descarga
     const descargarBtn = document.getElementById('descargarBtn');
     if (descargarBtn) {
-        descargarBtn.addEventListener('click', descargarPDF);
+        console.log('Botón de descarga encontrado');
+        descargarBtn.addEventListener('click', function() {
+            console.log('Botón clickeado');
+            descargarPDF();
+        });
+    } else {
+        console.error('No se encontró el botón de descarga');
     }
 });
 
 function descargarPDF() {
-    fetch('/pdf/Love.pdf')
+    console.log('Iniciando descarga del PDF');
+    
+    // Intentar primero con la ruta relativa
+    fetch('public/pdf/Love.pdf')
+        .then(response => {
+            console.log('Estado de la respuesta:', response.status);
+            if (!response.ok) {
+                // Si falla, intentar con la ruta absoluta
+                return fetch('/pdf/Love.pdf');
+            }
+            return response;
+        })
         .then(response => {
             if (!response.ok) {
-                throw new Error('No se pudo descargar el PDF');
+                console.error('Error en la respuesta:', response.status, response.statusText);
+                throw new Error('No se pudo descargar el PDF. Estado: ' + response.status);
             }
+            console.log('PDF encontrado, creando blob...');
             return response.blob();
         })
         .then(blob => {
+            console.log('Blob creado, iniciando descarga...');
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -41,9 +61,10 @@ function descargarPDF() {
             link.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(link);
+            console.log('Descarga iniciada');
         })
         .catch(error => {
-            console.error('Error al descargar el PDF:', error);
-            alert('Lo siento, hubo un error al descargar el PDF. Por favor, intenta de nuevo.');
+            console.error('Error detallado:', error);
+            alert('Lo siento, hubo un error al descargar el PDF. Por favor, intenta de nuevo.\nError: ' + error.message);
         });
 } 
