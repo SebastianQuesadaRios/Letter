@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const descargarBtn = document.getElementById('descargarBtn');
     if (descargarBtn) {
         console.log('Botón de descarga encontrado');
-        descargarBtn.addEventListener('click', function() {
+        descargarBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             console.log('Botón clickeado');
             descargarPDF();
         });
@@ -33,38 +34,56 @@ document.addEventListener('DOMContentLoaded', function() {
 function descargarPDF() {
     console.log('Iniciando descarga del PDF');
     
-    // Intentar primero con la ruta relativa
-    fetch('public/pdf/Love.pdf')
-        .then(response => {
-            console.log('Estado de la respuesta:', response.status);
-            if (!response.ok) {
-                // Si falla, intentar con la ruta absoluta
-                return fetch('/pdf/Love.pdf');
-            }
-            return response;
-        })
-        .then(response => {
-            if (!response.ok) {
-                console.error('Error en la respuesta:', response.status, response.statusText);
-                throw new Error('No se pudo descargar el PDF. Estado: ' + response.status);
-            }
-            console.log('PDF encontrado, creando blob...');
-            return response.blob();
-        })
-        .then(blob => {
-            console.log('Blob creado, iniciando descarga...');
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Love.pdf';
-            document.body.appendChild(link);
-            link.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(link);
-            console.log('Descarga iniciada');
-        })
-        .catch(error => {
-            console.error('Error detallado:', error);
-            alert('Lo siento, hubo un error al descargar el PDF. Por favor, intenta de nuevo.\nError: ' + error.message);
-        });
+    const pdfUrl = '/pdf/Love.pdf';
+    console.log('Intentando descargar desde:', pdfUrl);
+
+    // Crear un elemento iframe oculto
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    try {
+        // Intentar abrir el PDF directamente
+        iframe.src = pdfUrl;
+        
+        // También intentar con fetch como respaldo
+        fetch(pdfUrl)
+            .then(response => {
+                console.log('Estado de la respuesta:', response.status);
+                if (!response.ok) {
+                    throw new Error('No se pudo descargar el PDF. Estado: ' + response.status);
+                }
+                console.log('PDF encontrado, creando blob...');
+                return response.blob();
+            })
+            .then(blob => {
+                console.log('Blob creado, iniciando descarga...');
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'Love.pdf';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Limpieza
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+                    document.body.removeChild(iframe);
+                }, 100);
+                
+                console.log('Descarga iniciada');
+            })
+            .catch(error => {
+                console.error('Error detallado:', error);
+                document.body.removeChild(iframe);
+                
+                // Intentar abrir en una nueva pestaña como último recurso
+                window.open(pdfUrl, '_blank');
+            });
+    } catch (error) {
+        console.error('Error al intentar descargar:', error);
+        document.body.removeChild(iframe);
+        alert('Lo siento, hubo un error al descargar el PDF. Por favor, intenta de nuevo.');
+    }
 } 
