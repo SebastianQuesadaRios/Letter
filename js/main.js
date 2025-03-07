@@ -1,16 +1,26 @@
-document.addEventListener('contextmenu', function (e) {
-    e.preventDefault();
-});
-  
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'F12') {
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevenir clic derecho
+    document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
-    }
-    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-        e.preventDefault();
-    }
-    if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
+    });
+    
+    // Prevenir teclas
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'F12') {
+            e.preventDefault();
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+        }
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+        }
+    });
+
+    // Agregar event listener al botón de descarga
+    const descargarBtn = document.getElementById('descargarBtn');
+    if (descargarBtn) {
+        descargarBtn.addEventListener('click', descargarPDF);
     }
 });
 
